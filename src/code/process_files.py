@@ -10,7 +10,7 @@ def load_files():
     directorio = "../../data"
 
     # Lista para almacenar el contenido de los archivos
-    files = []
+    files = {}
 
     # Itera sobre cada archivo en el directorio
     for archivo in os.listdir(directorio):
@@ -18,13 +18,13 @@ def load_files():
             ruta_archivo = os.path.join(directorio, archivo)
             with open(ruta_archivo, "r", encoding="utf-8") as f:
                 contenido = f.read()
-                files.append(contenido.lower())
+                files[archivo] = contenido
     return files
 
 
 def process_docs(docs, use_lemmatization=True):
     nlp = spacy.load("es_core_news_sm")  # Lenguaje
-    docs_tokens = [[token for token in nlp(doc)] for doc in docs]  # Tokenizacion
+    docs_tokens = [[token for token in nlp(docs[doc].lower())] for doc in docs]  # Tokenizacion
     docs_tokens = [[token for token in doc if token.is_alpha] for doc in docs_tokens]
     stopwords = spacy.lang.es.stop_words.STOP_WORDS
     docs_tokens = [[token for token in doc if token.text not in stopwords] for doc in docs_tokens]
@@ -115,24 +115,4 @@ def procesar_consulta(consulta, U_red, S_red, VT_red, vocabulario_dict, lista_do
 
     return documentos_relevantes
 
-
-# Ejemplo de uso
-
-consulta = 'Naturaleza bella divina y amplia'
-
-consulta = process_docs([consulta])
-
-k = 20
-
-docs = load_files()
-t_docs = process_docs(docs)
-matriz_td, vocabulario_dict = construir_matriz_termino_documento(t_docs)
-
-U_red, S_red, VT_red = aplicar_SVD(matriz_td, k)
-
-documentos_relevantes = procesar_consulta(consulta, U_red, S_red, VT_red, vocabulario_dict, docs, 4)
-
-for i in documentos_relevantes:
-    print(f"Documento {i + 1}")
-    print(docs[i][0:100] + '...')
 
