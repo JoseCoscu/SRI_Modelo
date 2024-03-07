@@ -5,9 +5,7 @@ import spacy
 import nltk
 
 
-def load_files():
-    # Ruta al directorio que contiene los archivos de texto
-    directorio = "../../data"
+def load_files(directorio):
 
     # Lista para almacenar el contenido de los archivos
     files = {}

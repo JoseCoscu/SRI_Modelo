@@ -11,17 +11,17 @@ class FuncionThread(threading.Thread):
         self.res = []
 
 
-def search_files(U_red, S_red, VT_red, vocabulario_dict, docs):
+def search_files(U_red, S_red, VT_red, vocabulario_dict, docs, entrada_consulta, resultados):
     consulta = entrada_consulta.get()
 
     if consulta:
         consulta = pf.process_docs({'c':consulta})
         documentos_relevantes = pf.procesar_consulta(consulta, U_red, S_red, VT_red, vocabulario_dict, docs,
                                                      4)
-        mostrar_resultados(documentos_relevantes)
+        mostrar_resultados(documentos_relevantes, resultados, docs)
 
 
-def mostrar_resultados(index_doc):
+def mostrar_resultados(index_doc, resultados, docs):
     resultados.delete(1.0, tk.END)
     l = []
     for i, key in enumerate(docs):
@@ -33,9 +33,9 @@ def mostrar_resultados(index_doc):
                 resultados.insert(tk.END, k[1] + "\n"+docs[k[1]][0:100] + "\n")
 
 
-def pre_process():
+def pre_process(data):
     k = 10
-    docs = pf.load_files()
+    docs = pf.load_files(data)
     t_docs = pf.process_docs(docs)
     matriz_td, vocabulario_dict = pf.construir_matriz_termino_documento(t_docs)
     U_red, S_red, VT_red = pf.aplicar_SVD(matriz_td, k)
@@ -43,29 +43,30 @@ def pre_process():
     return U_red, S_red, VT_red, vocabulario_dict, docs
 
 
-t = FuncionThread(target=pre_process)
-t.start()
+def init(data):
+    t = FuncionThread(target=pre_process)
+    t.start()
 
-# Crear ventana
-ventana = tk.Tk()
-ventana.title("Search Docs")
+    # Crear ventana
+    ventana = tk.Tk()
+    ventana.title("Search Docs")
 
-# Crear entrada de texto para la consulta
-entrada_consulta = tk.Entry(ventana, width=50)
-entrada_consulta.pack(pady=10)
+    # Crear entrada de texto para la consulta
+    entrada_consulta = tk.Entry(ventana, width=50)
+    entrada_consulta.pack(pady=10)
 
-# Botón para procesar la consulta
-boton_consultar = tk.Button(ventana, text="Search",
-                            command=lambda: search_files(U_red, S_red, VT_red, vocabulario_dict, docs))
-boton_consultar.pack()
+    # Botón para procesar la consulta
+    boton_consultar = tk.Button(ventana, text="Search",
+                                command=lambda: search_files(U_red, S_red, VT_red, vocabulario_dict, docs, entrada_consulta, resultados))
+    boton_consultar.pack()
 
-# Crear recuadro para mostrar los resultados
-resultados = tk.Text(ventana, height=10, width=50)
-resultados.pack(pady=10)
+    # Crear recuadro para mostrar los resultados
+    resultados = tk.Text(ventana, height=10, width=50)
+    resultados.pack(pady=10)
 
-t.join()
+    t.join()
 
-U_red, S_red, VT_red, vocabulario_dict, docs = t.target()
+    U_red, S_red, VT_red, vocabulario_dict, docs = t.target(data)
 
-# Ejecutar la ventana
-ventana.mainloop()
+    # Ejecutar la ventana
+    ventana.mainloop()
